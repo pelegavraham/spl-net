@@ -1,6 +1,6 @@
 package bgu.spl.net.Message;
 
-public class NotificationMessage implements ClientToServerMessage {
+public class NotificationMessage implements ServerToClientMessage {
 
     short opcode;
     char notificationType;
@@ -16,10 +16,6 @@ public class NotificationMessage implements ClientToServerMessage {
 
     }
 
-    public String send(){
-        return opcode + notificationType + postingUser + '0' + content + '0';
-    }
-
     public char getNotificationType() {
         return notificationType;
     }
@@ -30,5 +26,15 @@ public class NotificationMessage implements ClientToServerMessage {
 
     public String getContent() {
         return content;
+    }
+
+    @Override
+    public String sendAsFormat() {
+        return opcode + notificationType + postingUser + '0' + content + '0';
+    }
+
+    @Override
+    public String sendAsOutput() {
+        return "NOTIFICATION "+notificationType+ postingUser+ content;
     }
 }

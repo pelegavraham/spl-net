@@ -16,7 +16,7 @@ public class ClientEncoderDecoderImp implements ClientEncoderDecoder<String> {
     public byte[] encode(String message) {
         String stringToServer = ClientMessageFactory.getMessageToSendServer(message);
         try {
-            return (stringToServer+"\n").getBytes("utf-8");
+            return (stringToServer).getBytes("utf-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
