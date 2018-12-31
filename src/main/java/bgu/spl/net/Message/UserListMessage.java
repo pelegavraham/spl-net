@@ -1,6 +1,6 @@
 package bgu.spl.net.Message;
 
-public class UserListMessage implements Message{
+public class UserListMessage implements ClientToServerMessage {
 
     short opcode;
 

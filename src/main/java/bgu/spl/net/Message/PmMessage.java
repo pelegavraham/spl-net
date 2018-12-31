@@ -1,6 +1,6 @@
 package bgu.spl.net.Message;
 
-public class PmMessage implements Message{
+public class PmMessage implements ClientToServerMessage {
 
     short opcode;
     String userName;

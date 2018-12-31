@@ -1,6 +1,6 @@
 package bgu.spl.net.Message;
 
-public class RegisterMessage implements Message{
+public class RegisterMessage implements ClientToServerMessage {
 
     private short opcode;
     private String userName;

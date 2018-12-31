@@ -1,6 +1,6 @@
 package bgu.spl.net.Message;
 
-public class ErrorMessage{
+public class ErrorMessage implements ServerToClientMessage {
 
     short opcode ;
     short opcodeMessage ;
@@ -12,8 +12,11 @@ public class ErrorMessage{
 
     }
 
-    @Override
-    public String toString() {
+    public String sendAsFormat() {
         return opcode + "" + opcodeMessage;
+    }
+
+    public String sendAsOutput() {
+        return "Error"+opcodeMessage;
     }
 }

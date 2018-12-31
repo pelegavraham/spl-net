@@ -1,6 +1,6 @@
 package bgu.spl.net.Message;
 
-public class StatMessage implements Message{
+public class StatMessage implements ClientToServerMessage {
 
     short opcode;
     String userName;

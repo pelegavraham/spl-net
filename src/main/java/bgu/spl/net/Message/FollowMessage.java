@@ -1,8 +1,6 @@
 package bgu.spl.net.Message;
 
-import java.util.List;
-
-public class FollowMessage implements Message{
+public class FollowMessage implements ClientToServerMessage {
 
     short opcode;
     short follow;

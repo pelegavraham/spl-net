@@ -1,6 +1,6 @@
 package bgu.spl.net.impl.rci;
 
-import bgu.spl.net.api.MessageEncoderDecoder;
+import bgu.spl.net.api.ServerEncoderDecoder;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInput;
@@ -10,7 +10,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 
-public class ObjectEncoderDecoder implements MessageEncoderDecoder<Serializable> {
+public class ObjectEncoderDecoder implements ServerEncoderDecoder<Serializable> {
 
     private final ByteBuffer lengthBuffer = ByteBuffer.allocate(4);
     private byte[] objectBytes = null;

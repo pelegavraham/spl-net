@@ -1,6 +1,6 @@
 package bgu.spl.net.Message;
 
-public class PostMessage implements Message{
+public class PostMessage implements ClientToServerMessage {
 
     short opcode;
     String content;

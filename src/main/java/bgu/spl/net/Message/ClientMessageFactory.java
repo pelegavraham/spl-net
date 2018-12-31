@@ -1,10 +1,10 @@
 package bgu.spl.net.Message;
 
-public class MessageFactory {
+public class ClientMessageFactory {
 
-    public String getMessageToSendServer (String inputCommand){
+    public static String getMessageToSendServer(String inputCommand){
 
-        String output;
+        String output="";
 
         if (inputCommand.contains("REGISTER")){
 
@@ -33,5 +33,7 @@ public class MessageFactory {
         else if (inputCommand.contains("NOTIFICATION")){
 
         }
+
+        return output;
     }
 }

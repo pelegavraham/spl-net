@@ -1,6 +1,6 @@
 package bgu.spl.net.srv;
 
-import bgu.spl.net.api.MessageEncoderDecoder;
+import bgu.spl.net.api.ServerEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -11,13 +11,13 @@ public abstract class BaseServer<T> implements Server<T> {
 
     private final int port;
     private final Supplier<MessagingProtocol<T>> protocolFactory;
-    private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
+    private final Supplier<ServerEncoderDecoder<T>> encdecFactory;
     private ServerSocket sock;
 
     public BaseServer(
             int port,
             Supplier<MessagingProtocol<T>> protocolFactory,
-            Supplier<MessageEncoderDecoder<T>> encdecFactory) {
+            Supplier<ServerEncoderDecoder<T>> encdecFactory) {
 
         this.port = port;
         this.protocolFactory = protocolFactory;

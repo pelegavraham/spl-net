@@ -1,6 +1,6 @@
 package bgu.spl.net.Message;
 
-public class LogoutMessage implements Message{
+public class LogoutMessage implements ClientToServerMessage {
 
     private short opcode;
 

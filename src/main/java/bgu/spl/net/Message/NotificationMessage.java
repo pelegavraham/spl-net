@@ -1,6 +1,6 @@
 package bgu.spl.net.Message;
 
-public class NotificationMessage implements Message{
+public class NotificationMessage implements ClientToServerMessage {
 
     short opcode;
     char notificationType;

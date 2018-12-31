@@ -1,6 +1,6 @@
 package bgu.spl.net.srv;
 
-import bgu.spl.net.api.MessageEncoderDecoder;
+import bgu.spl.net.api.ServerEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -16,7 +16,7 @@ public class Reactor<T> implements Server<T> {
 
     private final int port;
     private final Supplier<MessagingProtocol<T>> protocolFactory;
-    private final Supplier<MessageEncoderDecoder<T>> readerFactory;
+    private final Supplier<ServerEncoderDecoder<T>> readerFactory;
     private final ActorThreadPool pool;
     private Selector selector;
 
@@ -27,7 +27,7 @@ public class Reactor<T> implements Server<T> {
             int numThreads,
             int port,
             Supplier<MessagingProtocol<T>> protocolFactory,
-            Supplier<MessageEncoderDecoder<T>> readerFactory) {
+            Supplier<ServerEncoderDecoder<T>> readerFactory) {
 
         this.pool = new ActorThreadPool(numThreads);
         this.port = port;

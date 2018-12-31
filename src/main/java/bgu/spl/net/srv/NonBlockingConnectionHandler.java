@@ -1,6 +1,6 @@
 package bgu.spl.net.srv;
 
-import bgu.spl.net.api.MessageEncoderDecoder;
+import bgu.spl.net.api.ServerEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
 
 import java.io.IOException;
@@ -16,13 +16,13 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
     private static final ConcurrentLinkedQueue<ByteBuffer> BUFFER_POOL = new ConcurrentLinkedQueue<>();
 
     private final MessagingProtocol<T> protocol;
-    private final MessageEncoderDecoder<T> encdec;
+    private final ServerEncoderDecoder<T> encdec;
     private final Queue<ByteBuffer> writeQueue = new ConcurrentLinkedQueue<>();
     private final SocketChannel chan;
     private final Reactor reactor;
 
     public NonBlockingConnectionHandler(
-            MessageEncoderDecoder<T> reader,
+            ServerEncoderDecoder<T> reader,
             MessagingProtocol<T> protocol,
             SocketChannel chan,
             Reactor reactor) {
@@ -116,4 +116,8 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
         BUFFER_POOL.add(buff);
     }
 
+    @Override
+    public void send(T msg) {
+
+    }
 }

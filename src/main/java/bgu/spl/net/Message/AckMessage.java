@@ -1,6 +1,6 @@
 package bgu.spl.net.Message;
 
-public abstract class AckMessage implements Message{
+public abstract class AckMessage implements ServerToClientMessage {
 
     short opcode;
     short opcodeMessage;
@@ -12,7 +12,11 @@ public abstract class AckMessage implements Message{
     }
 
     @Override
-    public String toString(){
+    public String sendAsFormat(){
         return opcode + "" + opcodeMessage;
+    }
+
+    public String sendAsOutput(){         //send to the client
+        return "ACK"+opcodeMessage;
     }
 }
