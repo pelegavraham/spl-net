@@ -4,6 +4,9 @@ import bgu.spl.net.api.bidi.BidiMessagingProtocol;
 import bgu.spl.net.api.bidi.Connections;
 
 public class BgsProtocol<T> implements BidiMessagingProtocol<T> {
+
+    boolean shouldTerminate_ = false;
+
     @Override
     public void start(int connectionId, Connections<T> connections) {
 
