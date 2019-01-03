@@ -147,7 +147,7 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
             Short op = opcode;
             clear(); // end of message
 
-            if(op == 6)
+            if(op == 5)
                 return new PostMessage(con);
 
             if(op == 8)
@@ -372,9 +372,31 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
         if(message instanceof FollowAckMessage)
             return getFollowACK((FollowAckMessage) message);
 
-        throw new IllegalArgumentException("Unknown message type!");
+        return getACK(message);
     }
 
+
+    /**
+     * convert an ACK  message to bytes according to the protocol
+     * @param message the message
+     * @return the byte array
+     */
+    private byte[] getACK(AckMessage message) {
+
+        Objects.requireNonNull(message);
+
+        byte[] arr = new byte[4];
+
+        byte[] opcode = shortToBytes((short)10);
+        arr[0] = opcode[0];
+        arr[1] = opcode[1];
+
+        opcode = shortToBytes(message.getOpcodeMessage());
+        arr[2] = opcode[0];
+        arr[3] = opcode[1];
+
+        return arr;
+    }
 
     /**
      * convert am ACK of user list message to bytes according to the protocol
@@ -406,8 +428,6 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
 
             bytes.add((byte)'\0');
         }
-
-        bytes.add((byte)'\0');
 
         return list2array(bytes);
     }
@@ -442,8 +462,6 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
 
             bytes.add((byte)'\0');
         }
-
-        bytes.add((byte)'\0');
 
         return list2array(bytes);
     }
@@ -521,9 +539,9 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
     private byte boolToShort(boolean bool)
     {
         if(bool)
-            return 0;
+            return 1;
 
-        return 1;
+        return 0;
     }
 
     /**
