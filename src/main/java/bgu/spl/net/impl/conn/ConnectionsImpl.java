@@ -70,7 +70,15 @@ public class ConnectionsImpl<T> implements Connections<T> {
         if(handler == null)
             return false; // could mot sent - was not online
 
-        handler.send(msg);
+        try
+        {
+            handler.send(msg);
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+
         return true; // sent
     }
 }

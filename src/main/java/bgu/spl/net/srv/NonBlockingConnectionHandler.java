@@ -1,7 +1,7 @@
 package bgu.spl.net.srv;
 
 import bgu.spl.net.api.ServerEncoderDecoder;
-import bgu.spl.net.api.MessagingProtocol;
+import bgu.spl.net.api.bidi.BidiMessagingProtocol;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -15,7 +15,7 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
     private static final int BUFFER_ALLOCATION_SIZE = 1 << 13; //8k
     private static final ConcurrentLinkedQueue<ByteBuffer> BUFFER_POOL = new ConcurrentLinkedQueue<>();
 
-    private final MessagingProtocol<T> protocol;
+    private final BidiMessagingProtocol<T> protocol;
     private final ServerEncoderDecoder<T> encdec;
     private final Queue<ByteBuffer> writeQueue = new ConcurrentLinkedQueue<>();
     private final SocketChannel chan;
@@ -23,7 +23,7 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
 
     public NonBlockingConnectionHandler(
             ServerEncoderDecoder<T> reader,
-            MessagingProtocol<T> protocol,
+            BidiMessagingProtocol<T> protocol,
             SocketChannel chan,
             Reactor reactor) {
         this.chan = chan;
@@ -48,13 +48,8 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
                 try {
                     while (buf.hasRemaining()) {
                         T nextMessage = encdec.decodeNextByte(buf.get());
-                        if (nextMessage != null) {
-                            T response = protocol.process(nextMessage);
-                            if (response != null) {
-                                writeQueue.add(ByteBuffer.wrap(encdec.encode(response)));
-                                reactor.updateInterestedOps(chan, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                            }
-                        }
+                        if (nextMessage != null)
+                             protocol.process(nextMessage);
                     }
                 } finally {
                     releaseBuffer(buf);
@@ -117,7 +112,12 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
     }
 
     @Override
-    public void send(T msg) {
+    public void send(T msg)
+    {
+        if(protocol.shouldTerminate())
+            throw new IllegalStateException("protocol should end!");
 
+        writeQueue.add(ByteBuffer.wrap(encdec.encode(msg)));
+        reactor.updateInterestedOps(chan, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
     }
 }

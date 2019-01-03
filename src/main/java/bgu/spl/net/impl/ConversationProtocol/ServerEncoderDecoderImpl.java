@@ -193,7 +193,7 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
                 if(numOfUsers == 0) // no users todo : right?
                 {
                     List<String> copy = new LinkedList<>();
-                    boolean isFollow = followOrUnFollow == 0;
+                    boolean isFollow = (followOrUnFollow == 0);
 
                     clear(); // to start reeading new message
                     return new FollowMessage(isFollow, copy);
