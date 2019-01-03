@@ -4,12 +4,8 @@ import bgu.spl.net.ServerMessages.Message;
 import bgu.spl.net.api.bidi.Connections;
 import javafx.util.Pair;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -109,15 +105,7 @@ public class ServerDataBase
         if(passwordFromDB == null)
             return false; // Error?
 
-        boolean temp =  passwordFromDB.equals(password);
-
-        if(!temp)
-            return false;
-
-        synchronized (getUserNotNull(user))
-        {
-            return true;
-        }
+        return passwordFromDB.equals(password);
     }
 
     /**
@@ -195,7 +183,7 @@ public class ServerDataBase
      * @param message the message
      * @param reciver the user to send the message to
      */
-    public void sendPublicMessage(String sender, String reciver, String message, Connections< ? super Message> connections)
+    public void sendPublicMessage(String sender, String reciver, String message, Connections<Message> connections)
     {
         // input check
         checkInput(sender);
@@ -212,7 +200,7 @@ public class ServerDataBase
      * @param message the message
      * @return true id successfully sent, false otherwise
      */
-    public boolean sendPrivateMessage(String sender, String reciver, String message, Connections< ? super Message> connections )
+    public boolean sendPrivateMessage(String sender, String reciver, String message, Connections< Message> connections)
     {
         // input check
         checkInput(sender);
@@ -234,7 +222,7 @@ public class ServerDataBase
      * @param user the user
      * @return the list of messages this user haven't received yet the key is the message, the value is the sender.
      */
-    public ConcurrentLinkedQueue<Pair<String, String>> getUnreadPostOf(String user)
+    public Queue<Pair<String, String>> getUnreadPostOf(String user)
     {
         checkInput(user);
 
@@ -249,7 +237,7 @@ public class ServerDataBase
      * @param user the user
      * @return the list of messages this user haven't received yet the key is the message, the value is the sender.
      */
-    public ConcurrentLinkedQueue<Pair<String, String>> getUnreadPMOf(String user)
+    public Queue<Pair<String, String>> getUnreadPMOf(String user)
     {
         checkInput(user);
 

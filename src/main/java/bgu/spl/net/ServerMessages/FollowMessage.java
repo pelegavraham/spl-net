@@ -12,14 +12,14 @@ public class FollowMessage implements ClientToServerMessage {
     /** true if this is a follow request, false if this is unfollow request */
     private boolean follow;
 
-    /** The list of users to follow\unfollow */
+    /** The list of users to follow or unfollow */
     private List<String> users;
 
 
     /**
      * constructor
      * @param follow true if this is a follow request, false if this is unfollow request
-     * @param users The list of users to follow\unfollow
+     * @param users The list of users to follow or unfollow
      */
     public FollowMessage(boolean follow,  List<String> users) {
 
@@ -32,7 +32,7 @@ public class FollowMessage implements ClientToServerMessage {
     }
 
     /**
-     * Getter to the follow\unfollow
+     * Getter to the follow or unfollow
      * @return true if this is a follow request, false if this is unfollow request
      */
     public boolean isFollow() {

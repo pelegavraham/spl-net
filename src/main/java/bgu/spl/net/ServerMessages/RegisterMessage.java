@@ -1,7 +1,5 @@
 package bgu.spl.net.ServerMessages;
 
-import bgu.spl.net.api.App_Data.ServerDataBase;
-
 import java.util.Objects;
 
 /**

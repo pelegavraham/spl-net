@@ -169,7 +169,7 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
      */
     private Message getDecodeFollow(byte nextByte)
     {
-        if(followOrUnFollow == null) // still trying to unfer follow\unfollow
+        if(followOrUnFollow == null) // still trying to infer follow or unfollow
         {
             followOrUnFollow = nextByte;
             return null;

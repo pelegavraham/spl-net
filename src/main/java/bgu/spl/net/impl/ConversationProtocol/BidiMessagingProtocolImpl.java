@@ -4,10 +4,13 @@ import bgu.spl.net.ServerMessages.*;
 import bgu.spl.net.api.App_Data.ServerDataBase;
 import bgu.spl.net.api.bidi.BidiMessagingProtocol;
 import bgu.spl.net.api.bidi.Connections;
+import bgu.spl.net.impl.conn.LogedInUsers;
+import javafx.util.Pair;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 
 /**
  * The protocol
@@ -127,7 +130,23 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
         if(DB.canLogin(message.getUserName(), message.getPassword()))
         {
             username = message.getUserName(); // logged in - save for later
+
+            LogedInUsers.getInstance().logIn(username, connectionId); // log in
+
             send(new AckMessage((short) 2)); // successful
+
+            //todo : check
+
+            Queue<Pair<String, String>> PMs =  DB.getUnreadPMOf(username);
+            Queue<Pair<String, String>> Posts =  DB.getUnreadPostOf(username);
+
+            for(Pair<String, String> pair : PMs)
+                send(new NotificationMessage(true, pair.getValue(), pair.getKey() ));
+
+            for(Pair<String, String> pair : Posts)
+                send(new NotificationMessage(false, pair.getValue(), pair.getKey() ));
+
+            // todo : end check
         }
         else
             send(new ErrorMessage((short)2)); // failed
@@ -145,9 +164,13 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
             send(new ErrorMessage((short)3)); // not logged in
         else
         {
+            send(new AckMessage((short) 3)); // successful
+
+            LogedInUsers.getInstance().logout(username); // log out
+            connections.disconnect(connectionId); // disconnect
+
             username = null; // logged out
             shouldTerminate = true; // end of conversation
-            send(new AckMessage((short) 3)); // successful
         }
     }
 
@@ -173,7 +196,7 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
             if(changed.isEmpty())
                 send(new ErrorMessage((short)4)); // nothing changed
             else
-                send(new UserListAckMessage(changed));
+                send(new FollowAckMessage(changed));
         }
     }
 
@@ -199,6 +222,8 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
 
               for (String user : interstedUsers)
                   DB.sendPublicMessage(username, user, message.getContent(), connections);
+
+              send(new AckMessage((short)5)); // according to the specification - an answer must always be sent back
         }
 
     }
@@ -220,7 +245,10 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
             if(!DB.isRegistered(reciver))
                 send(new ErrorMessage((short)6)); // reciver is not registered
             else
+            {
                 DB.sendPrivateMessage(username, reciver, message.getContent(), connections);
+                send(new AckMessage((short)6)); // according to the specification - an answer must always be sent back
+            }
         }
     }
 

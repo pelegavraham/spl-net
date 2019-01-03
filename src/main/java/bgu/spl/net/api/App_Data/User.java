@@ -1,9 +1,9 @@
 package bgu.spl.net.api.App_Data;
 
+import bgu.spl.net.impl.conn.LogedInUsers;
 import bgu.spl.net.ServerMessages.Message;
 import bgu.spl.net.ServerMessages.NotificationMessage;
 import bgu.spl.net.api.bidi.Connections;
-import bgu.spl.net.impl.conn.LogedInUsers;
 import javafx.util.Pair;
 
 import java.util.LinkedList;
@@ -147,7 +147,7 @@ public final class User
      * @param message the message
      * @param  sentTo the user to sent the message to
      */
-    void sentPublicMessage(String message, User sentTo, Connections< ? super Message> connections)
+    void sentPublicMessage(String message, User sentTo, Connections<Message> connections)
     {
         // input check
         checkInput(message);
@@ -162,7 +162,7 @@ public final class User
      * @param reciver the reciver
      * @param message the message
      */
-    void sendPrivateMessage(String message, User reciver, Connections< ? super Message> connections)
+    void sendPrivateMessage(String message, User reciver, Connections<Message> connections)
     {
         // input check
         checkInput(reciver);
@@ -272,7 +272,7 @@ public final class User
      * @param message the message
      * @param sender the sender of the message
      */
-    private synchronized void recivePost(String message, User sender, Connections< ? super Message> connections)
+    private synchronized void recivePost(String message, User sender, Connections<Message> connections)
     {
         checkInput(message);
         checkInput(sender);
@@ -291,7 +291,7 @@ public final class User
      * @param message the message
      * @param sender the sender of the message
      */
-    private synchronized void recivePrivateMessage(String message, User sender, Connections< ? super Message> connections)
+    private synchronized void recivePrivateMessage(String message, User sender, Connections<Message> connections)
     {
         checkInput(message);
         checkInput(sender);

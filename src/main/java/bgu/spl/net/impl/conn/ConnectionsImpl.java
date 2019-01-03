@@ -2,9 +2,6 @@ package bgu.spl.net.impl.conn;
 import bgu.spl.net.api.bidi.Connections;
 import bgu.spl.net.srv.ConnectionHandler;
 
-import java.net.Socket;
-import java.sql.Connection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;

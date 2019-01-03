@@ -1,27 +1,41 @@
 package bgu.spl.net.impl.echo;
 
-import bgu.spl.net.impl.OLD.MessagingProtocol;
+import bgu.spl.net.api.bidi.BidiMessagingProtocol;
+import bgu.spl.net.api.bidi.Connections;
 
 import java.time.LocalDateTime;
 
-public class EchoProtocol implements MessagingProtocol<String> {
+public class EchoProtocol implements BidiMessagingProtocol<String> {
 
     private boolean shouldTerminate = false;
+    private Connections<String> connections;
+    private int connectionId;
 
     @Override
-    public String process(String msg) {
-        shouldTerminate = "bye".equals(msg);
-        System.out.println("[" + LocalDateTime.now() + "]: " + msg);
-        return createEcho(msg);
+    public void start(int connectionId, Connections<String> connections) {
+        this.connections = connections;
+        this.connectionId = connectionId;
     }
 
-    private String createEcho(String message) {
-        String echoPart = message.substring(Math.max(message.length() - 2, 0), message.length());
-        return message + " .. " + echoPart + " .. " + echoPart + " ..";
+    @Override
+    public void process(String msg) {
+        shouldTerminate = "bye".equals(msg);
+        System.out.println("[" + LocalDateTime.now() + "]: " + msg);
+        String response = createEcho(msg);
+
+        connections.send(connectionId, response);
+
+        if(shouldTerminate)
+            connections.disconnect(connectionId);
     }
 
     @Override
     public boolean shouldTerminate() {
         return shouldTerminate;
+    }
+
+    private String createEcho(String message) {
+        String echoPart = message.substring(Math.max(message.length() - 2, 0));
+        return message + " .. " + echoPart + " .. " + echoPart + " ..";
     }
 }
