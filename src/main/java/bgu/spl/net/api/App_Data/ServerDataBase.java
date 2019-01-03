@@ -1,10 +1,15 @@
 package bgu.spl.net.api.App_Data;
 
+import bgu.spl.net.ServerMessages.Message;
+import bgu.spl.net.api.bidi.Connections;
+import javafx.util.Pair;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -27,6 +32,7 @@ public class ServerDataBase
     private ServerDataBase()
     {
         users = new ConcurrentHashMap<>();
+        orderedUsers = new CopyOnWriteArrayList<>();
     }
 
     /**
@@ -44,6 +50,8 @@ public class ServerDataBase
     /** this hols the users as the key. the value of map is it's password. */
     private final Map<User, String> users;
 
+    private final List<String> orderedUsers;
+
 
     /**
      * register a user to the data base
@@ -56,9 +64,26 @@ public class ServerDataBase
         checkInput(user); // check input
         checkInput(password);
 
-        User u = new User(user);
+        if(users.putIfAbsent(new User(user), password) == null)
+        {
+            // registered successfully
+            orderedUsers.add(user);
+            return true;
+        }
 
-         return users.putIfAbsent(u, password) == null;
+        return false;
+    }
+
+    /**
+     * check i a user us registered
+     * @param user the user name
+     * @return true if registered, false otherwise
+     */
+    public boolean isRegistered(String user)
+    {
+        checkInput(user); // check input
+
+        return getUser(user) != null;
     }
 
     /**
@@ -84,7 +109,15 @@ public class ServerDataBase
         if(passwordFromDB == null)
             return false; // Error?
 
-        return passwordFromDB.equals(password);
+        boolean temp =  passwordFromDB.equals(password);
+
+        if(!temp)
+            return false;
+
+        synchronized (getUserNotNull(user))
+        {
+            return true;
+        }
     }
 
     /**
@@ -93,11 +126,40 @@ public class ServerDataBase
      */
     public List<String> getRegisterdUseres()
     {
-        List<String> registered = new LinkedList<>();
-        users.forEach( (user, pass) ->  registered.add(user.getUserName())); // get all users
-
-        return new CopyOnWriteArrayList<>(registered);
+        return orderedUsers;
     }
+
+    /**
+     * get the stats of a user
+     * @param user the user
+     * @return amp with 3 keys coresponding to the number if the stat they are representing : posts, followers, following.
+     */
+    public Map<String, Integer> getStatOf(String user)
+    {
+        Objects.requireNonNull(user);
+
+        Map<String, Integer> map = new ConcurrentHashMap<>();
+
+        int posts = 0;
+        int followers = 0;
+        int following = 0;
+
+        User u = getUser(user);
+
+        if(u != null)
+        {
+            posts = u.getNumOfPosts();
+            followers = u.getNumOfFolowers();
+            following = u.getNumOfFolowing();
+        }
+
+        map.put("posts", posts);
+        map.put("followers", followers);
+        map.put("following", following);
+
+        return map;
+    }
+
 
     /**
      * make the given user follow all the users in the list
@@ -110,10 +172,7 @@ public class ServerDataBase
         checkInput(user); // check input
         checkInput(toFollow);
 
-        User u = getUser(user);
-        Objects.requireNonNull(u, "An unregistered userd tried to perform operation IN THE DATABASE");
-
-        return u.followALL(getUsers(toFollow));
+        return getUserNotNull(user).followALL(getUsers(toFollow));
     }
 
     /**
@@ -127,36 +186,23 @@ public class ServerDataBase
         checkInput(user); // check input
         checkInput(toUnFollow);
 
-        User u = getUser(user);
-        Objects.requireNonNull(u, "An unregistered userd tried to perform operation IN THE DATABASE");
-
-        return u.unfollowALL(getUsers(toUnFollow));
+        return getUserNotNull(user).unfollowALL(getUsers(toUnFollow));
     }
 
     /**
      * send a meesage
      * @param sender the name of the sender user
      * @param message the message
-     * @param  taged the users that were taged in this message
+     * @param reciver the user to send the message to
      */
-    public void sentPublicMessage(String sender, String message, List<String> taged)
+    public void sendPublicMessage(String sender, String reciver, String message, Connections< ? super Message> connections)
     {
         // input check
         checkInput(sender);
         checkInput(message);
-        checkInput(taged);
+        checkInput(reciver);
 
-        User u = getUserNotNull(sender);
-        List<User> to = new LinkedList<>(getFollowersOf(u));
-
-        getUsers(taged).forEach(user ->
-        {
-            if(!to.contains(user)) // only one thread have access to this, so this is thread safe.
-                to.add(user);
-        });
-
-
-        u.sentPublicMessage(message, new CopyOnWriteArrayList<>(to)); // send messages
+        getUserNotNull(sender).sentPublicMessage(message, getUser(reciver), connections); // send messages
     }
 
     /**
@@ -166,22 +212,70 @@ public class ServerDataBase
      * @param message the message
      * @return true id successfully sent, false otherwise
      */
-    public boolean sendPrivateMessage(String sender, String reciver, String message)
+    public boolean sendPrivateMessage(String sender, String reciver, String message, Connections< ? super Message> connections )
     {
         // input check
         checkInput(sender);
         checkInput(reciver);
         checkInput(message);
+        Objects.requireNonNull(connections);
 
         User to = getUser(reciver);
 
         if(to == null)
             return false; // no such user exists
 
-        getUserNotNull(sender).sendPrivateMessage(message, to);
+        getUserNotNull(sender).sendPrivateMessage(message, to, connections);
         return true;
     }
 
+    /**
+     * Get all the posts the given user did not received
+     * @param user the user
+     * @return the list of messages this user haven't received yet the key is the message, the value is the sender.
+     */
+    public ConcurrentLinkedQueue<Pair<String, String>> getUnreadPostOf(String user)
+    {
+        checkInput(user);
+
+        synchronized (getUserNotNull(user))
+        {
+            return getUserNotNull(user).getUreadPosts();
+        }
+    }
+
+    /**
+     * Get all the PM the given user did not received
+     * @param user the user
+     * @return the list of messages this user haven't received yet the key is the message, the value is the sender.
+     */
+    public ConcurrentLinkedQueue<Pair<String, String>> getUnreadPMOf(String user)
+    {
+        checkInput(user);
+
+        synchronized (getUserNotNull(user))
+        {
+            return getUserNotNull(user).getUreadPM();
+        }
+    }
+
+    /**
+     * get the followers if a user
+     * @param user the user
+     * @return a list of it's followers
+     */
+    public List<String> getFollowersOf(String user)
+    {
+        List<String> followers = new LinkedList<>();
+
+        users.keySet().forEach(u ->
+        {
+            if(u.doesfollow(user)) // he his following the user
+                followers.add(u.getUserName());
+        });
+
+        return new CopyOnWriteArrayList<>(followers);
+    }
 
 
 

@@ -2,12 +2,18 @@ package bgu.spl.net.ServerMessages;
 
 import bgu.spl.net.api.App_Data.ServerDataBase;
 
+import java.util.Objects;
+
 /**
  * This class represent a log in message sent by a client to the server
  */
-public class LoginMessage extends RegisterMessage implements ClientToServerMessage {
+public class LoginMessage implements ClientToServerMessage {
 
-    //NOTE : This class extends RegisterMessage to avoid code duplication only.
+    /** the user name to register with */
+    private String userName;
+
+    /** the paswword to register with */
+    private String password;
 
     /**
      * constructor
@@ -16,7 +22,29 @@ public class LoginMessage extends RegisterMessage implements ClientToServerMessa
      */
     public LoginMessage(String userName, String password)
     {
-        super(userName, password);
+        Objects.requireNonNull(userName);
+        Objects.requireNonNull(password);
+
+        this.userName = userName;
+        this.password = password;
+    }
+
+    /**
+     * Getter to the user name
+     * @return the user name
+     */
+    public String getUserName()
+    {
+        return userName;
+    }
+
+    /**
+     * Getter to the password
+     * @return the password
+     */
+    public String getPassword()
+    {
+        return password;
     }
 
 }

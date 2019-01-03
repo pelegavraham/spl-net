@@ -3,7 +3,7 @@ package bgu.spl.net.ServerMessages;
 /**
  * This class represent a stat message respond
  */
-public class StatsAckMessage extends AckMessage
+public class StatAckMessage extends AckMessage
 {
 
     /** number of posts */
@@ -22,7 +22,7 @@ public class StatsAckMessage extends AckMessage
      * @param numOFollowers number of Followers
      * @param numOFollowing number of Following
      */
-    public StatsAckMessage(int numOfPosts, int numOFollowers, int numOFollowing) {
+    public StatAckMessage(int numOfPosts, int numOFollowers, int numOFollowing) {
         super((short) 8);
 
         this.numOfPosts = numOfPosts;

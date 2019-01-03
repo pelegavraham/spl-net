@@ -30,4 +30,20 @@ public class FollowMessage implements ClientToServerMessage {
         this.follow = follow;
         this.users = users;
     }
+
+    /**
+     * Getter to the follow\unfollow
+     * @return true if this is a follow request, false if this is unfollow request
+     */
+    public boolean isFollow() {
+        return follow;
+    }
+
+    /**
+     * Getter to the user list
+     * @return the user list
+     */
+    public List<String> getUsers() {
+        return users;
+    }
 }

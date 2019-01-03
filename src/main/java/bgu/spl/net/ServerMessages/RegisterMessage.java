@@ -2,6 +2,8 @@ package bgu.spl.net.ServerMessages;
 
 import bgu.spl.net.api.App_Data.ServerDataBase;
 
+import java.util.Objects;
+
 /**
  * This class represent a register command in the server
  */
@@ -20,6 +22,9 @@ public class RegisterMessage implements ClientToServerMessage {
      */
     public RegisterMessage(String userName, String password)
     {
+        Objects.requireNonNull(userName);
+        Objects.requireNonNull(password);
+
         this.userName=userName;
         this.password=password;
     }

@@ -1,10 +1,17 @@
 package bgu.spl.net.api.App_Data;
 
+import bgu.spl.net.ServerMessages.Message;
+import bgu.spl.net.ServerMessages.NotificationMessage;
+import bgu.spl.net.api.bidi.Connections;
+import bgu.spl.net.impl.conn.LogedInUsers;
+import javafx.util.Pair;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,11 +31,6 @@ public final class User
     /** the amount users that follow this user */
     private final AtomicInteger numOfFollowers;
 
-    /** the number of the last message this user received */
-    //private final AtomicInteger firstNotseenPost;
-
-    /** the number of the last PM this user received */
-    //private final AtomicInteger firstNotseenPM;
 
 
 
@@ -40,10 +42,10 @@ public final class User
     private final Map<User, String> follows;
 
     /** the public messages that might interest this user, and their sender */
-    private final Map<String, User> posts;
+    private final ConcurrentLinkedQueue<Pair<User, String>> posts;
 
     /** the private messages that sent to this user, and their sender */
-    private final Map<String, User> mailBox;
+    private final ConcurrentLinkedQueue<Pair<User, String>> mailBox;
 
 
 
@@ -52,21 +54,18 @@ public final class User
      * Constructor
      * @param userName the user name
      */
-    public User(String userName)
+    User(String userName)
     {
         Objects.requireNonNull(userName);
 
         this.userName = userName;
 
         follows = new ConcurrentHashMap<>();
-        posts= new ConcurrentHashMap<>();
-        mailBox = new ConcurrentHashMap<>();
+        posts= new ConcurrentLinkedQueue<>();
+        mailBox = new ConcurrentLinkedQueue<>();
 
         numOfPosts = new AtomicInteger(0);
         numOfFollowers = new AtomicInteger(0);
-        //firstNotseenPost = new AtomicInteger(0);
-        //firstNotseenPM = new AtomicInteger(0);
-
     }
 
     /**
@@ -74,7 +73,7 @@ public final class User
      * @param follwing the user to check of the this is following him
      * @return true if this follows follwing, false otherwise
      */
-    public boolean doesfollow( User follwing)
+    boolean doesfollow( User follwing)
     {
         checkInput(follwing);
 
@@ -82,11 +81,27 @@ public final class User
     }
 
     /**
+     * check if the user follows the other user
+     * @param follwing the user to check of the this is following him
+     * @return true if this follows follwing, false otherwise
+     */
+    boolean doesfollow(String follwing)
+    {
+        checkInput(follwing);
+
+        for(User u : follows.keySet())
+            if(u.getUserName().equals(follwing))
+                return true;
+
+        return false;
+    }
+
+    /**
      * follow all the users in the list
      * @param  toFollow the users he is want to follow
      * @return the list of the new users he followed, users he was already following will be ignored
      */
-    public List<String> followALL(List<User> toFollow)
+    List<String> followALL(List<User> toFollow)
     {
         checkInput(toFollow);
 
@@ -109,7 +124,7 @@ public final class User
      * @param  toUnFollow the users he is want to unfollow
      * @return the list of the users he unfollowed, users he was  did not followed will be ignored
      */
-    public List<String> unfollowALL( List<User> toUnFollow)
+    List<String> unfollowALL( List<User> toUnFollow)
     {
         checkInput(toUnFollow);
 
@@ -130,16 +145,16 @@ public final class User
     /**
      * send a meesage
      * @param message the message
-     * @param  sentTo the users to sent the message to
+     * @param  sentTo the user to sent the message to
      */
-    public void sentPublicMessage(String message, List<User> sentTo)
+    void sentPublicMessage(String message, User sentTo, Connections< ? super Message> connections)
     {
         // input check
         checkInput(message);
         checkInput(sentTo);
 
         numOfPosts.incrementAndGet(); //numOfPosts++
-        sentTo.forEach((user -> user.recivePost(message, this)));
+        sentTo.recivePost(message, this, connections);
     }
 
     /**
@@ -147,13 +162,13 @@ public final class User
      * @param reciver the reciver
      * @param message the message
      */
-    public void sendPrivateMessage(String message, User reciver)
+    void sendPrivateMessage(String message, User reciver, Connections< ? super Message> connections)
     {
         // input check
         checkInput(reciver);
         checkInput(message);
 
-        reciver.recivePrivateMessage(message, this);
+        reciver.recivePrivateMessage(message, this, connections);
     }
 
 
@@ -164,7 +179,7 @@ public final class User
      * Getter to the userName
      * @return the userName
      */
-    public String getUserName() {
+    String getUserName() {
         return userName;
     }
 
@@ -172,7 +187,7 @@ public final class User
      * Getter to the number of posts sent by this user
      * @return the number of posts sent by this user
      */
-    public int getNumOfPosts() {
+    int getNumOfPosts() {
         return numOfPosts.get();
     }
 
@@ -180,7 +195,7 @@ public final class User
      * Getter to the number of followers this user have
      * @return the number of followers this user have
      */
-    public int getNumOfFolowers() {
+    int getNumOfFolowers() {
         return numOfFollowers.get();
     }
 
@@ -188,8 +203,44 @@ public final class User
      * Getter to the number of following this user is follow
      * @return the number of following this user is follow
      */
-    public int getNumOfFolowing() {
+    int getNumOfFolowing() {
         return follows.keySet().size();
+    }
+
+    /**
+     * receive all unread posts
+     * @return a mpa of the un read posts : key - the message, value - the sender
+     */
+    ConcurrentLinkedQueue<Pair<String, String>> getUreadPosts()
+    {
+        ConcurrentLinkedQueue<Pair<String, String>> messages = new ConcurrentLinkedQueue<>();
+
+        synchronized (posts)
+        {
+            for(Pair<User, String> pair : posts)
+                messages.add(new Pair<>( pair.getKey().getUserName(), pair.getValue()));
+
+            posts.clear(); // those messages received by the user
+            return messages;
+        }
+    }
+
+    /**
+     * receive all unread PM
+     * @return a mpa of the un read posts : key - the message, value - the sender
+     */
+    ConcurrentLinkedQueue<Pair<String, String>> getUreadPM()
+    {
+        ConcurrentLinkedQueue<Pair<String, String>> messages = new ConcurrentLinkedQueue<>();
+
+        synchronized (mailBox)
+        {
+            for(Pair<User, String> pair : mailBox)
+                messages.add(new Pair<>( pair.getKey().getUserName(), pair.getValue()));
+
+            mailBox.clear(); // those messages received by the user
+            return messages;
+        }
     }
 
 
@@ -221,12 +272,18 @@ public final class User
      * @param message the message
      * @param sender the sender of the message
      */
-    private void recivePost(String message, User sender)
+    private synchronized void recivePost(String message, User sender, Connections< ? super Message> connections)
     {
         checkInput(message);
         checkInput(sender);
 
-        posts.put(message, sender);
+        synchronized (posts)
+        {
+            int conId = LogedInUsers.getInstance().getConIdOf(getUserName());
+
+            if(!connections.send(conId, new NotificationMessage(false, sender.getUserName(), message)))
+                posts.add(new Pair<>(sender, message));
+        }
     }
 
     /**
@@ -234,13 +291,21 @@ public final class User
      * @param message the message
      * @param sender the sender of the message
      */
-    private void recivePrivateMessage(String message, User sender)
+    private synchronized void recivePrivateMessage(String message, User sender, Connections< ? super Message> connections)
     {
         checkInput(message);
         checkInput(sender);
+        Objects.requireNonNull(connections);
 
-        mailBox.put(message, sender);
+        synchronized (mailBox)
+        {
+            int conId = LogedInUsers.getInstance().getConIdOf(getUserName());
+
+            if(!connections.send(conId, new NotificationMessage(true, sender.getUserName(), message)))
+                mailBox.add(new Pair<>(sender, message));
+        }
     }
+
 
 
     // ------------------------------------------------ input checks ----------------------------------------------------------

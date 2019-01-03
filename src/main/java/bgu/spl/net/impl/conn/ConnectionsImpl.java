@@ -7,33 +7,31 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConnectionsImpl<T> implements Connections<T> {
 
-    /** The map for the connection handlers */
-    private Map<Integer, ConnectionHandler<T>> connectionHandlers;
-
-    /** Map the online users (performed log in) to their connID */
-    //private Map<String, Integer> onlineUsers;
-
     /**
      * Constructor
+     * it is private dou to the singleton design pattern
      */
     public ConnectionsImpl()
     {
         this.connectionHandlers = new ConcurrentHashMap<>();
+        this.nextFree = new AtomicInteger(0);
     }
+
+    /** The map for the connection handlers */
+    private volatile Map<Integer, ConnectionHandler<T>> connectionHandlers;
+
+    /** The next free connectionID */
+    private volatile AtomicInteger nextFree;
+
 
     @Override
     public synchronized boolean send(int connectionId, T msg)
     {
-        ConnectionHandler<T> handler = connectionHandlers.get(connectionId);
-
-        if(handler == null)
-            return false; // could mot sent - was not online
-
-        handler.send(msg);
-        return true; // sent
+        return send( connectionHandlers.get(connectionId), msg);
     }
 
     @Override
@@ -46,5 +44,33 @@ public class ConnectionsImpl<T> implements Connections<T> {
     public synchronized void disconnect(int connectionId)
     {
         connectionHandlers.remove(connectionId);
+    }
+
+    /**
+     * connect a user (not necery a user that loged in)
+     * @param handler the hndler of the user
+     * @return the conId of this user
+     */
+    public synchronized int connect(ConnectionHandler<T> handler)
+    {
+        int comId = nextFree.getAndIncrement();
+        connectionHandlers.put(comId, handler);
+
+        return comId;
+    }
+
+    /**
+     * sent a message to a conection handler
+     * @param handler the connection handler
+     * @param msg the message
+     * @return true if sucssfully sent (was online) false otherwise
+     */
+    private synchronized boolean send( ConnectionHandler<T> handler, T msg)
+    {
+        if(handler == null)
+            return false; // could mot sent - was not online
+
+        handler.send(msg);
+        return true; // sent
     }
 }

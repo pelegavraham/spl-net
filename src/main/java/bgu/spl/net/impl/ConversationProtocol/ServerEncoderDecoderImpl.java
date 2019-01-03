@@ -83,6 +83,23 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
         return getDecodeNextByteWithOpCode(nextByte);
     }
 
+    @Override
+    public byte[] encode(Message message)
+    {
+        Objects.requireNonNull(message);
+
+        if(message instanceof ErrorMessage)
+            return getError((ErrorMessage)message);
+
+        if(message instanceof NotificationMessage)
+            return getNotification((NotificationMessage) message);
+
+        if(message instanceof AckMessage)
+            return getAck((AckMessage) message);
+
+        throw new IllegalArgumentException("Unknown message type!");
+    }
+
     /**
      * Encode the next byte.
      * it is known that the opcode were already recived.
@@ -167,22 +184,22 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
             }
             else // finished
             {
-               byte[] arr = new byte[2];
-               arr[0] = numOfUsersFirstByte;
-               arr[1] = nextByte;
+                byte[] arr = new byte[2];
+                arr[0] = numOfUsersFirstByte;
+                arr[1] = nextByte;
 
-               numOfUsers = bytesToShort(arr);
+                numOfUsers = bytesToShort(arr);
 
-               if(numOfUsers == 0) // no users todo : right?
-               {
-                   List<String> copy = new LinkedList<>();
-                   boolean isFollow = followOrUnFollow == 0;
+                if(numOfUsers == 0) // no users todo : right?
+                {
+                    List<String> copy = new LinkedList<>();
+                    boolean isFollow = followOrUnFollow == 0;
 
-                   clear(); // to start reeading new message
-                   return new FollowMessage(isFollow, copy);
-               }
+                    clear(); // to start reeading new message
+                    return new FollowMessage(isFollow, copy);
+                }
 
-               return null; // stil reading
+                return null; // stil reading
             }
         }
 
@@ -253,7 +270,7 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
                 throw new IllegalStateException("just for the compiler");
             }
             else
-                {
+            {
                 password.add(nextByte);
                 return null;
             }
@@ -282,23 +299,6 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
         currentUserName = new LinkedList<>();
 
         content = new LinkedList<>();
-    }
-
-    @Override
-    public byte[] encode(Message message)
-    {
-        Objects.requireNonNull(message);
-
-        if(message instanceof ErrorMessage)
-            return getError((ErrorMessage)message);
-
-        if(message instanceof NotificationMessage)
-            return getNotification((NotificationMessage) message);
-
-        if(message instanceof AckMessage)
-            return getAck((AckMessage) message);
-
-        throw new IllegalArgumentException("Unknown message type!");
     }
 
     /**
@@ -366,8 +366,11 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
         if(message instanceof UserListAckMessage)
             return getUserlistACK((UserListAckMessage) message);
 
-        if(message instanceof StatsAckMessage)
-            return getStatsACK((StatsAckMessage) message);
+        if(message instanceof StatAckMessage)
+            return getStatsACK((StatAckMessage) message);
+
+        if(message instanceof FollowAckMessage)
+            return getFollowACK((FollowAckMessage) message);
 
         throw new IllegalArgumentException("Unknown message type!");
     }
@@ -410,11 +413,48 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
     }
 
     /**
+     * convert am ACK of follow message to bytes according to the protocol
+     * @param message the message
+     * @return the byte array
+     */
+    private byte[] getFollowACK(FollowAckMessage message) {
+
+        Objects.requireNonNull(message);
+
+        List<Byte> bytes = new LinkedList<>();
+
+        byte[] opcode = shortToBytes((short) 10);
+        bytes.add(opcode[0]);
+        bytes.add(opcode[1]);
+
+        opcode = shortToBytes((short) 4);
+        bytes.add(opcode[0]);
+        bytes.add(opcode[1]);
+
+        opcode = shortToBytes((short) message.getUsers().size());
+        bytes.add(opcode[0]);
+        bytes.add(opcode[1]);
+
+        for(String user : message.getUsers())
+        {
+            for(byte b : user.getBytes())
+                bytes.add(b);
+
+            bytes.add((byte)'\0');
+        }
+
+        bytes.add((byte)'\0');
+
+        return list2array(bytes);
+    }
+
+
+    /**
      * convert am ACK of stats message to bytes according to the protocol
      * @param message the message
      * @return the byte array
      */
-    private byte[] getStatsACK(StatsAckMessage message)
+    private byte[] getStatsACK(StatAckMessage message)
     {
         Objects.requireNonNull(message);
 
