@@ -120,6 +120,9 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
     private void processLogin(LoginMessage message)
     {
         Objects.requireNonNull(message);
+        boolean isPrvate;
+        String sender;
+        String content;
 
         if(username != null)
         {
@@ -135,18 +138,17 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
 
             send(new AckMessage((short) 2)); // successful
 
-            //todo : check
+            Queue<Pair<Pair<Boolean, String>, String>> messages =  DB.getUnreadMessagesOf(username);
 
-            Queue<Pair<String, String>> PMs =  DB.getUnreadPMOf(username);
-            Queue<Pair<String, String>> Posts =  DB.getUnreadPostOf(username);
+            // sent the user all his unread messages
+            for(Pair<Pair<Boolean, String>, String> pair : messages)
+            {
+                isPrvate = pair.getKey().getKey();
+                sender = pair.getKey().getValue();
+                content = pair.getValue();
 
-            for(Pair<String, String> pair : PMs)
-                send(new NotificationMessage(true, pair.getValue(), pair.getKey() ));
-
-            for(Pair<String, String> pair : Posts)
-                send(new NotificationMessage(false, pair.getValue(), pair.getKey() ));
-
-            // todo : end check
+                send(new NotificationMessage(isPrvate, sender, content ));
+            }
         }
         else
             send(new ErrorMessage((short)2)); // failed
@@ -242,13 +244,10 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
             send(new ErrorMessage((short)6)); // not logged in
         else
         {
-            if(!DB.isRegistered(reciver))
-                send(new ErrorMessage((short)6)); // reciver is not registered
-            else
-            {
-                DB.sendPrivateMessage(username, reciver, message.getContent(), connections);
+            if(DB.sendPrivateMessage(username, reciver, message.getContent(), connections))
                 send(new AckMessage((short)6)); // according to the specification - an answer must always be sent back
-            }
+               else
+                   send(new ErrorMessage((short)6)); // reciver is not registered
         }
     }
 

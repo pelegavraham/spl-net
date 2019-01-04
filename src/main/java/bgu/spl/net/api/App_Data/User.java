@@ -6,10 +6,7 @@ import bgu.spl.net.ServerMessages.NotificationMessage;
 import bgu.spl.net.api.bidi.Connections;
 import javafx.util.Pair;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -41,11 +38,8 @@ public final class User
      */
     private final Map<User, String> follows;
 
-    /** the public messages that might interest this user, and their sender */
-    private final ConcurrentLinkedQueue<Pair<User, String>> posts;
-
-    /** the private messages that sent to this user, and their sender */
-    private final ConcurrentLinkedQueue<Pair<User, String>> mailBox;
+    /** the private an public messages that sent to this user, and their sender */
+    private final ConcurrentLinkedQueue<Pair<Pair<Boolean, User>, String>> mailBox;
 
 
 
@@ -61,7 +55,6 @@ public final class User
         this.userName = userName;
 
         follows = new ConcurrentHashMap<>();
-        posts= new ConcurrentLinkedQueue<>();
         mailBox = new ConcurrentLinkedQueue<>();
 
         numOfPosts = new AtomicInteger(0);
@@ -208,41 +201,22 @@ public final class User
     }
 
     /**
-     * receive all unread posts
-     * @return a mpa of the un read posts : key - the message, value - the sender
+     * receive all unread messages
+     * @return a list pf pair that it's key is meta-data : is private + sender, and the value is the message
      */
-    ConcurrentLinkedQueue<Pair<String, String>> getUreadPosts()
+    Queue<Pair<Pair<Boolean, String>, String>> getUreadMessages()
     {
-        ConcurrentLinkedQueue<Pair<String, String>> messages = new ConcurrentLinkedQueue<>();
-
-        synchronized (posts)
-        {
-            for(Pair<User, String> pair : posts)
-                messages.add(new Pair<>( pair.getKey().getUserName(), pair.getValue()));
-
-            posts.clear(); // those messages received by the user
-            return messages;
-        }
-    }
-
-    /**
-     * receive all unread PM
-     * @return a mpa of the un read posts : key - the message, value - the sender
-     */
-    ConcurrentLinkedQueue<Pair<String, String>> getUreadPM()
-    {
-        ConcurrentLinkedQueue<Pair<String, String>> messages = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<Pair<Pair<Boolean, String>, String>> messages = new ConcurrentLinkedQueue<>();
 
         synchronized (mailBox)
         {
-            for(Pair<User, String> pair : mailBox)
-                messages.add(new Pair<>( pair.getKey().getUserName(), pair.getValue()));
+            for(Pair<Pair<Boolean, User>, String> pair : mailBox)
+                messages.add(new Pair<>(new Pair<>(pair.getKey().getKey(), pair.getKey().getValue().getUserName()), pair.getValue()));
 
             mailBox.clear(); // those messages received by the user
             return messages;
         }
     }
-
 
     // --------------------------------------------------- equals ---------------------------------------------------------
 
@@ -277,12 +251,12 @@ public final class User
         checkInput(message);
         checkInput(sender);
 
-        synchronized (posts)
+        synchronized (mailBox)
         {
             int conId = LogedInUsers.getInstance().getConIdOf(getUserName());
 
             if(!connections.send(conId, new NotificationMessage(false, sender.getUserName(), message)))
-                posts.add(new Pair<>(sender, message));
+                mailBox.add(new Pair<>(new Pair<>(false, sender), message));
         }
     }
 
@@ -302,7 +276,7 @@ public final class User
             int conId = LogedInUsers.getInstance().getConIdOf(getUserName());
 
             if(!connections.send(conId, new NotificationMessage(true, sender.getUserName(), message)))
-                mailBox.add(new Pair<>(sender, message));
+                mailBox.add(new Pair<>(new Pair<>(true, sender), message));
         }
     }
 

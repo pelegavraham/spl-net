@@ -218,32 +218,17 @@ public class ServerDataBase
     }
 
     /**
-     * Get all the posts the given user did not received
+     * Get all the posts and PM the given user did not received
      * @param user the user
-     * @return the list of messages this user haven't received yet the key is the message, the value is the sender.
+     * @return a list pf pair that it's key is meta-data : is private + sender, and the value is the message
      */
-    public Queue<Pair<String, String>> getUnreadPostOf(String user)
+    public Queue<Pair<Pair<Boolean, String>, String>> getUnreadMessagesOf(String user)
     {
         checkInput(user);
 
         synchronized (getUserNotNull(user))
         {
-            return getUserNotNull(user).getUreadPosts();
-        }
-    }
-
-    /**
-     * Get all the PM the given user did not received
-     * @param user the user
-     * @return the list of messages this user haven't received yet the key is the message, the value is the sender.
-     */
-    public Queue<Pair<String, String>> getUnreadPMOf(String user)
-    {
-        checkInput(user);
-
-        synchronized (getUserNotNull(user))
-        {
-            return getUserNotNull(user).getUreadPM();
+            return getUserNotNull(user).getUreadMessages();
         }
     }
 
@@ -315,24 +300,6 @@ public class ServerDataBase
         }
 
         return followList;
-    }
-
-    /**
-     * get the followers if a user
-     * @param user the user
-     * @return a list of it's followers
-     */
-    private List<User> getFollowersOf(User user)
-    {
-        List<User> followers = new LinkedList<>();
-
-        users.keySet().forEach(u ->
-        {
-            if(u.doesfollow(user)) // he his following the user
-                followers.add(u);
-        });
-
-        return new CopyOnWriteArrayList<>(followers);
     }
 
     // ------------------------------------------------ input checks ----------------------------------------------------------
