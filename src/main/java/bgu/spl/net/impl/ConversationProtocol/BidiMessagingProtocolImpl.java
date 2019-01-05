@@ -1,11 +1,11 @@
 package bgu.spl.net.impl.ConversationProtocol;
 
 import bgu.spl.net.ServerMessages.*;
-import bgu.spl.net.api.App_Data.ServerDataBase;
+import bgu.spl.net.impl.App_Data.ServerDataBase;
 import bgu.spl.net.api.bidi.BidiMessagingProtocol;
 import bgu.spl.net.api.bidi.Connections;
 import bgu.spl.net.impl.conn.LogedInUsers;
-import javafx.util.Pair;
+import bgu.spl.net.Pair.Pair;
 
 import java.util.List;
 import java.util.Map;

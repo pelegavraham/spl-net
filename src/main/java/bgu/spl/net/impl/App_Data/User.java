@@ -1,10 +1,10 @@
-package bgu.spl.net.api.App_Data;
+package bgu.spl.net.impl.App_Data;
 
 import bgu.spl.net.impl.conn.LogedInUsers;
 import bgu.spl.net.ServerMessages.Message;
 import bgu.spl.net.ServerMessages.NotificationMessage;
 import bgu.spl.net.api.bidi.Connections;
-import javafx.util.Pair;
+import bgu.spl.net.Pair.Pair;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
