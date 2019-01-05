@@ -190,7 +190,7 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
 
                 numOfUsers = bytesToShort(arr);
 
-                if(numOfUsers == 0) // no users todo : right?
+                if(numOfUsers == 0) // no users
                 {
                     List<String> copy = new LinkedList<>();
                     boolean isFollow = (followOrUnFollow == 0);
@@ -207,12 +207,13 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
         {
             numOf0++;
             userNameList.add(new String(list2array(currentUserName)));
+
             currentUserName.clear(); // to start reading new user
 
             if(numOf0 == numOfUsers) // end
             {
                 List<String> copy = new LinkedList<>(userNameList);
-                boolean isFollow = followOrUnFollow == 0;
+                boolean isFollow = (followOrUnFollow == 0);
 
                 clear(); // to start reeading new message
                 return new FollowMessage(isFollow, copy);
@@ -539,9 +540,9 @@ public class ServerEncoderDecoderImpl implements ServerEncoderDecoder<Message>
     private byte boolToShort(boolean bool)
     {
         if(bool)
-            return 1;
+            return '\1';
 
-        return 0;
+        return '\0';
     }
 
     /**

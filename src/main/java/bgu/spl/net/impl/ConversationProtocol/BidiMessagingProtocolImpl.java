@@ -66,31 +66,47 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
         Objects.requireNonNull(message);
         Objects.requireNonNull(connections); // must initiate this firstly
 
-        if(message instanceof RegisterMessage)
+        if(message instanceof RegisterMessage) {
             processRegister((RegisterMessage) message);
+            return;
+        }
 
-        if(message instanceof LoginMessage)
-            processLogin((LoginMessage)message);
+        if(message instanceof LoginMessage) {
+            processLogin((LoginMessage) message);
+            return;
+        }
 
-        if(message instanceof LogoutMessage)
-            processLogout((LogoutMessage)message);
+        if(message instanceof LogoutMessage) {
+            processLogout((LogoutMessage) message);
+            return;
+        }
 
-        if(message instanceof FollowMessage)
-            processFollow((FollowMessage)message);
+        if(message instanceof FollowMessage) {
+            processFollow((FollowMessage) message);
+            return;
+        }
 
-        if(message instanceof PostMessage)
-            processPost((PostMessage)message);
+        if(message instanceof PostMessage) {
+            processPost((PostMessage) message);
+            return;
+        }
 
-        if(message instanceof PmMessage)
-            processPM((PmMessage)message);
+        if(message instanceof PmMessage) {
+            processPM((PmMessage) message);
+            return;
+        }
 
-        if(message instanceof UserListMessage)
-            processUserList((UserListMessage)message);
+        if(message instanceof UserListMessage) {
+            processUserList((UserListMessage) message);
+            return;
+        }
 
-        if(message instanceof StatMessage)
-            processStat((StatMessage)message);
+        if(message instanceof StatMessage) {
+            processStat((StatMessage) message);
+            return;
+        }
 
-        throw new IllegalStateException("unknown message sent to the server");
+        throw new IllegalStateException("unknown message sent to the server : " + message.getClass().getName()); // mostly for debugging
     }
 
     @Override
@@ -110,7 +126,7 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
         if(DB.register(message.getUserName(), message.getPassword()))
             send(new AckMessage((short)1)); // successful
         else
-            send(new ErrorMessage((short)1)); // failed
+            send(new ErrorMessage((short) 1)); // failed
     }
 
     /**
@@ -151,7 +167,9 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
             }
         }
         else
-            send(new ErrorMessage((short)2)); // failed
+        {
+             send(new ErrorMessage((short) 2)); // failed
+        }
     }
 
     /**

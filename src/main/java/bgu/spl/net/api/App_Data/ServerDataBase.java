@@ -160,7 +160,15 @@ public class ServerDataBase
         checkInput(user); // check input
         checkInput(toFollow);
 
-        return getUserNotNull(user).followALL(getUsers(toFollow));
+        try
+        {
+            return getUserNotNull(user).followALL(getUsers(toFollow));
+        }
+        catch (Exception e)
+        {
+            return new LinkedList<>(); // error accrued
+        }
+
     }
 
     /**

@@ -66,18 +66,6 @@ public final class User
      * @param follwing the user to check of the this is following him
      * @return true if this follows follwing, false otherwise
      */
-    boolean doesfollow( User follwing)
-    {
-        checkInput(follwing);
-
-        return follows.containsKey(follwing);
-    }
-
-    /**
-     * check if the user follows the other user
-     * @param follwing the user to check of the this is following him
-     * @return true if this follows follwing, false otherwise
-     */
     boolean doesfollow(String follwing)
     {
         checkInput(follwing);
