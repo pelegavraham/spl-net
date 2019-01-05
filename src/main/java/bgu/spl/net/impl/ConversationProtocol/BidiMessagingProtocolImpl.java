@@ -245,10 +245,9 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
                 if(!interstedUsers.contains(user))
                     interstedUsers.add(user);
 
-              for (String user : interstedUsers)
-                  DB.sendPublicMessage(username, user, message.getContent(), connections);
+             DB.sendPublicMessage(username, interstedUsers, message.getContent(), connections);
 
-              send(new AckMessage((short)5)); // according to the specification - an answer must always be sent back
+             send(new AckMessage((short)5)); // according to the specification - an answer must always be sent back
         }
 
     }

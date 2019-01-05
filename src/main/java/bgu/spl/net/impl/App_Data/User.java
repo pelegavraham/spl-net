@@ -134,7 +134,6 @@ public final class User
         checkInput(message);
         checkInput(sentTo);
 
-        numOfPosts.incrementAndGet(); //numOfPosts++
         sentTo.recivePost(message, this, connections);
     }
 
@@ -150,6 +149,14 @@ public final class User
         checkInput(message);
 
         reciver.recivePrivateMessage(message, this, connections);
+    }
+
+    /**
+     * increase the num of posts by 1
+     */
+    void increseNumOfPosts()
+    {
+        numOfPosts.incrementAndGet(); //numOfPosts++
     }
 
 

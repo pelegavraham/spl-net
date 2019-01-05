@@ -6,6 +6,7 @@ import bgu.spl.net.Pair.Pair;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -182,23 +183,39 @@ public class ServerDataBase
         checkInput(user); // check input
         checkInput(toUnFollow);
 
-        return getUserNotNull(user).unfollowALL(getUsers(toUnFollow));
+        try
+        {
+            return getUserNotNull(user).unfollowALL(getUsers(toUnFollow));
+        }
+        catch (Exception e)
+        {
+            return new LinkedList<>(); // error accrued
+        }
     }
 
     /**
      * send a meesage
      * @param sender the name of the sender user
      * @param message the message
-     * @param reciver the user to send the message to
+     * @param recivers the users to send the message to
      */
-    public void sendPublicMessage(String sender, String reciver, String message, Connections<Message> connections)
+    public void sendPublicMessage(String sender, List<String> recivers, String message, Connections<Message> connections)
     {
         // input check
         checkInput(sender);
         checkInput(message);
-        checkInput(reciver);
+        checkInput(recivers);
 
-        getUserNotNull(sender).sentPublicMessage(message, getUser(reciver), connections); // send messages
+        try
+        {
+            getUserNotNull(sender).increseNumOfPosts();
+
+            for (String reciver : recivers)
+                sendPublicMessage(sender, reciver, message, connections);
+
+        }
+        catch (Exception e) {}
+
     }
 
     /**
@@ -221,7 +238,15 @@ public class ServerDataBase
         if(to == null)
             return false; // no such user exists
 
-        getUserNotNull(sender).sendPrivateMessage(message, to, connections);
+        try
+        {
+            getUserNotNull(sender).sendPrivateMessage(message, to, connections);
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+
         return true;
     }
 
@@ -236,7 +261,14 @@ public class ServerDataBase
 
         synchronized (getUserNotNull(user))
         {
-            return getUserNotNull(user).getUreadMessages();
+            try
+            {
+                return getUserNotNull(user).getUreadMessages();
+            }
+            catch (Exception e)
+            {
+                return new ConcurrentLinkedQueue<>();
+            }
         }
     }
 
@@ -262,6 +294,27 @@ public class ServerDataBase
 
     // --------------------------------------------------- private  -----------------------------------------------------------
 
+
+    /**
+     * send a meesage
+     * @param sender the name of the sender user
+     * @param message the message
+     * @param reciver the user to send the message to
+     */
+    private void sendPublicMessage(String sender, String reciver, String message, Connections<Message> connections)
+    {
+        // input check
+        checkInput(sender);
+        checkInput(message);
+        checkInput(reciver);
+
+        try
+        {
+            getUserNotNull(sender).sentPublicMessage(message, getUserNotNull(reciver), connections); // send messages
+        }
+        catch (Exception e) {}
+
+    }
 
     /**
      * get the user object fron it's user name
