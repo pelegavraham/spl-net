@@ -151,7 +151,11 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
             username = message.getUserName(); // logged in - save for later
 
             if(!LogedInUsers.getInstance().logIn(username, connectionId)) // log in
+            {
                 send(new ErrorMessage((short) 2)); // this user was already logged in!
+                username = null; // can't login
+                return;
+            }
 
             send(new AckMessage((short) 2)); // successful
 
